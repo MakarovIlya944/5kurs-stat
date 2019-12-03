@@ -6,9 +6,9 @@ import numpy as np
 ###    zasorennoe raspredelenie [1]
 ### symetric one t diff l
 ### assemetric diff t diff l
-def generate(n, l=[1,1], t=[0,0], e=0):
+def generate(n, filename, l=[1,1], t=[0,0], e=0):
     res = []
-    with open(f'data_{n}','w') as f:
+    with open(filename, 'w') as f:
         for i in range(n):
             if np.random.random(1) <= (1 - e):
                 _l = l[0]
