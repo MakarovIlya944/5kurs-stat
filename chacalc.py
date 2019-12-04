@@ -1,6 +1,6 @@
 import numpy as np
+import scipy.integrate
 from scipy.optimize import minimize
-
 
 my_round = 5
 
@@ -27,41 +27,27 @@ def exces(data):
     v = variance(data)
     return round(np.sum([(el - e)**4 for el in data]) / len(data) / (v ** 2),my_round)
 
+# b=0 ОМП
+def integralOfInfluenceRadical(y,t,l,f,dF,b):
+    F=lambda x: __commonFunctionRadical(x,t,l,f,dF,b)*dF(x,l)
+    i = scipy.integrate.quad(F, -10, -0.000000001)+scipy.integrate.quad(F, 0.000000001,10)
+    return __commonFunctionRadical(y,t,l,f,dF,b)/i[0]
+
+def __commonFunctionRadical(y,t,l,f,dF,b):
+    return dF((y-t)/l,l)/f((y-t)/l)*np.power(f((y-t)/l),b)
 
 # оценка максимального правдоподобия
 def сredibilityAssessment(data, f, l):
     last_t = median(data)
     F = lambda t: np.sum([-np.log(f((y-t)/l)) for y in data])
     res = minimize(F, last_t, method='nelder-mead',
-    options={'xtol': 1e-8})
+    options={'xtol': 1e-3})
     return round(res.x[0],my_round)
-    # dF = lambda t: np.sum([np.tanh((y-t)/l)/l for y in data])
-    # i = 0
-    # while i < maxiter:
-    #         new_t = last_t - F(last_t)/dF(last_t)
-    #         if not (i % 1):
-    #             print(f'#{i}\tt={new_t}')
-    #         if abs(new_t - last_t) < eps:
-    #             return new_t
-    #         last_t = new_t
-    #         i += 1
-    # return new_t
 
 # обобщенная радикальная оценка
 def generalRadical(data, f, l, b):
     last_t = median(data)
     F = lambda t: (-1/(b*np.power(l,b))) * np.sum([np.power(f((y-t)/l),b) for y in data])
     res = minimize(F, last_t, method='nelder-mead',
-    options={'xtol': 1e-8})
+    options={'xtol': 1e-3})
     return round(res.x[0],my_round)
-    # dF = lambda t: (-1/np.power(np.pi*l,b)/l) * np.sum([
-    #     np.sinh((y-t)/l) / np.power(np.cosh((y-t)/l),b+1)
-    #     for y in data])
-    # i = 0
-    # while i < maxiter:
-    #         new_t = last_t - F(last_t)/dF(last_t)
-    #         if abs(new_t - last_t) < eps:
-    #             return new_t
-    #         last_t = new_t
-    #         i += 1
-    # return new_t
