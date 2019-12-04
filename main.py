@@ -11,6 +11,7 @@ def df(x,l):
 
 lineLenght = 70
 monteCarloNumber = 10
+monteCarloStep = monteCarloNumber//10
 
 def makeExperiment(b, left=3, right=4, t=[0,0], l=[1,1], e=0):
     ans = {}
@@ -48,7 +49,7 @@ def makeExperiment(b, left=3, right=4, t=[0,0], l=[1,1], e=0):
                 res_data['radical'][bi]['calculated'].append(generalRadical(data, f, l[0], bi))
                 res_data['radical'][bi]['criteria'].append((res_data['radical'][bi]['calculated'][-1]-t[0])*(res_data['radical'][bi]['calculated'][-1]-t[0]))
 
-            if not m % 10:
+            if not m % monteCarloStep:
                 print(f'{m/monteCarloNumber*100}%')
 
         res_data['median'] = avr(res_data['median'])
@@ -79,7 +80,7 @@ def makeExperiment(b, left=3, right=4, t=[0,0], l=[1,1], e=0):
 
 def main():
 
-    X = np.arange(-10,10,0.5)
+    X = np.arange(-5,5,0.1)
     # проверяемые значение параметра смещения
     t = [0, 1]
     # ошбика для параметра смещения
@@ -119,20 +120,23 @@ def main():
                 f_clear = [f((x-_t)/_l) for x in X]
                 f_dirty = [f((x-_er_t-_t)/(_er_l+_l)) for x in X]
                 f_summe = [(1-_e)*f_clear[i] + _e*f_dirty[i] for i in range(len(X))]
-                snap = figure()
-                plot(X, f_clear, label='clear', X, f_dirty, label='clear', X, f_summe, label='clear')
+                snap, ax = subplots()
+                ax.plot(X, f_clear, label='clear')
+                ax.plot(X, f_dirty, label='dirty')
+                ax.plot(X, f_summe, label='summ')
+                ax.legend()
                 snap.savefig(f't_{_t}_{_er_t+_t}_l_{_l}_{_er_l+_l}_e_{_e}.png')
-
-                inluence = lambda x, b: integralOfInfluenceRadical(x,_t,_l,f,df,b)
-
-                for bi in b:
-                    f_robast = [inluence(x, bi) for x in X]
-                    snap = figure()
-                    plot(X, f_robast)
-                    snap.savefig(f'b_{bi}_t_{_t}_l_{_l}.png')
 
                 with open('result.json', 'a+') as _f:
                     _f.write(json.dumps(d) + '\n')
+
+            influence = lambda x, b: integralOfInfluenceRadical(x,_t,_l,f,df,b)
+
+            for bi in b:
+                f_robast = [influence(x, bi) for x in X]
+                snap = figure()
+                plot(X, f_robast)
+                snap.savefig(f'b_{bi}_t_{_t}_l_{_l}.png')
 
 if __name__ == '__main__':
     main()
